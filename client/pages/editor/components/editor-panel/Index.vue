@@ -2,7 +2,7 @@
   <div class="editor-pane" @click="handleClickCanvas" @keyup.esc="handleKeyup" ref="editorPane">
     <div class="editor-pane-inner">
       <div class="editor-main" :style="{transform: 'scale('+scale+')', width: projectData.width + 'px', height: projectData.height + 'px'}">
-        <div class="page-preview-wrapper" ref="canvas-panel" id="canvas-panel" :style="getCommonStyle(activePage.commonStyle)">
+        <div class="page-preview-wrapper" ref="canvas-panel" id="canvas-panel" draggable @dragover="e=>e.preventDefault()" @drop="handleDrop" :style="getCommonStyle(activePage.commonStyle)">
           <!--页面组件列表展示-->
           <edit-shape
                   v-for="item in activePage.elements"
@@ -40,6 +40,7 @@
 	import editorProjectConfig from '@client/pages/editor/DataModel'
 	import {mapState, mapGetters} from 'vuex'
 	import html2canvas from 'html2canvas';
+	import { getComponentProps } from '@client/common/js/common'
 
 	// todo 测试用
 	window._qk_register_components_object = _qk_register_components_object
@@ -124,6 +125,12 @@
       this.editorPaneWidth = this.$refs.editorPane.offsetHeight;
 		},
 		methods: {
+			handleDrop(e) {
+				let toAddElem = e.dataTransfer.getData('quark:comp')
+				toAddElem = JSON.parse(toAddElem)
+				let needProps = getComponentProps(toAddElem)
+				this.$store.dispatch('addElement', {...toAddElem, needProps})
+			},
 			/**
 			 * 元素被点击
 			 * @param uuid

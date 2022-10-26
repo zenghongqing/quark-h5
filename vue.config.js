@@ -29,7 +29,7 @@ module.exports = {
 		loaderOptions: {
 			sass: {
 				// @/ 是 src/ 的别名
-				data: fs.readFileSync(path.resolve(__dirname, `./client/common/styles/variables.scss`), 'utf-8') // 公共变量文件注入
+				prependData: fs.readFileSync(path.resolve(__dirname, `./client/common/styles/variables.scss`), 'utf-8') // 公共变量文件注入
 			}
 		}
 	},

@@ -180,6 +180,7 @@
 			async showPreviewFn() {
 				// await this.screenshots()
 				// 提交数据再预览
+				console.log(this.projectData, '保存的页面数据')
 				this.$API.updatePage({pageData: this.projectData}).then(() => {
 					this.showPreview = true
 				})

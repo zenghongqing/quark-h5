@@ -30,18 +30,18 @@ function Decrypt(encrypted){
 }
 
 // 测试加、解密
-function testAES(){
-	var data = "1234567890123456"; // 明文
+// function testAES(){
+// 	var data = "1234567890123456"; // 明文
 
-	console.log("加密前：" + data);
+// 	console.log("加密前：" + data);
 
-	// 测试加密
-	var encrypted = Encrypt(data); // 密文
-	console.log("加密后: " + encrypted);
+// 	// 测试加密
+// 	var encrypted = Encrypt(data); // 密文
+// 	console.log("加密后: " + encrypted);
 
-	// var decryptedStr = Decrypt(encrypted);
-	// console.log("解密后: " + decryptedStr);
-}
+// 	// var decryptedStr = Decrypt(encrypted);
+// 	// console.log("解密后: " + decryptedStr);
+// }
 // testAES()
 export default {
 	Decrypt ,

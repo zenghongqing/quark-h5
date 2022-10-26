@@ -8,7 +8,7 @@
             <p>{{item.title}}</p>
           </div>
           <div v-if="item.components && item.components.length">
-            <div class="components-lib-item" v-for="(element,i) in item.components" :key="i"
+            <div class="components-lib-item" v-for="(element,i) in item.components" draggable @dragstart="handleDragStart($event, element)" :key="i"
                  @click="handleClick(element)">
               <div class="lib-item-img"><i :class="[element.icon]"></i></div>
               <p class="lib-item-title">{{element.title}}</p>
@@ -24,9 +24,9 @@
 </template>
 
 <script>
-	import {camelCase} from 'lodash'
 	import eleConfig from '../../ele-config'
-	import {_qk_register_components_object} from '@client/plugins/index'
+  import {_qk_register_components_object} from '@client/plugins/index'
+  import { getComponentProps } from '@client/common/js/common'
   window._qk_register_components_object=_qk_register_components_object;
   console.log(_qk_register_components_object)
 	export default {
@@ -37,33 +37,20 @@
 			}
 		},
 		methods: {
+      handleDragStart(e, element) {
+        console.log(e, element, '=====');
+        let data = JSON.stringify(element, null, 2)
+        e.dataTransfer.setData('text/plain', data)
+        e.dataTransfer.setData('quark:comp', data)
+        e.dataTransfer.effectAllowed = 'copyMove';
+      },
 			/**
 			 * 点击事件, 向父组件派发add-element事件，参数： 当前组件对象
 			 * @param item
 			 */
 			handleClick(item) {
-				let props = this.getComponentProps(item.elName);
+				let props = getComponentProps(item.elName);
 				this.$store.dispatch('addElement', {...item, needProps: props})
-			},
-			/**
-			 * 根据elname获取组件默认props数据
-			 * @param elName
-			 */
-			getComponentProps(elName) {
-				let elComponentData
-				for (let key in _qk_register_components_object) {
-					if (key.toLowerCase() === camelCase(elName).toLowerCase()) {
-						elComponentData = _qk_register_components_object[key];
-						break;
-					}
-				}
-				if (!elComponentData) return {}
-
-				let props = {}
-				for (let key in elComponentData.props) {
-					props[key] = [Object, Array].includes(elComponentData.props[key].type) ? elComponentData.props[key].default() : elComponentData.props[key].default
-				}
-				return props;
 			},
 		}
 	}
