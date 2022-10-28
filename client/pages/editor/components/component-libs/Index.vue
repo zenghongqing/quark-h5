@@ -8,8 +8,11 @@
             <p>{{item.title}}</p>
           </div>
           <div v-if="item.components && item.components.length">
-            <div class="components-lib-item" v-for="(element,i) in item.components" draggable @dragstart="handleDragStart($event, element)" :key="i"
-                 @click="handleClick(element)">
+            <div class="components-lib-item" v-for="(element,i) in item.components"
+            draggable
+            @dragstart="handleDragStart($event, element)"
+            @dragend="handleDragEnd"
+            :key="i">
               <div class="lib-item-img"><i :class="[element.icon]"></i></div>
               <p class="lib-item-title">{{element.title}}</p>
             </div>
@@ -43,6 +46,12 @@
         e.dataTransfer.setData('text/plain', data)
         e.dataTransfer.setData('quark:comp', data)
         e.dataTransfer.effectAllowed = 'copyMove';
+      },
+      handleDragEnd() {
+        // this.$refs['canvas-panel'].removeEventListener("dragenter", this.dragenter);
+        // this.$refs['canvas-panel'].removeEventListener("dragover", this.dragover);
+        // this.$refs['canvas-panel'].removeEventListener("dragleave", this.dragleave);
+        // this.$refs['canvas-panel'].removeEventListener("drop", this.drop);
       },
 			/**
 			 * 点击事件, 向父组件派发add-element事件，参数： 当前组件对象

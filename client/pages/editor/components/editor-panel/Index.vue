@@ -2,19 +2,33 @@
   <div class="editor-pane" @click="handleClickCanvas" @keyup.esc="handleKeyup" ref="editorPane">
     <div class="editor-pane-inner">
       <div class="editor-main" :style="{transform: 'scale('+scale+')', width: projectData.width + 'px', height: projectData.height + 'px'}">
-        <div class="page-preview-wrapper" ref="canvas-panel" id="canvas-panel" draggable @dragover="e=>e.preventDefault()" @drop="handleDrop" :style="getCommonStyle(activePage.commonStyle)">
-          <!--页面组件列表展示-->
-          <edit-shape
-                  v-for="item in activePage.elements"
-                  :key="item.uuid"
-                  :uuid="item.uuid"
-                  :defaultStyle="item.commonStyle"
-                  :style="getCommonStyle({width: item.commonStyle.width, height: item.commonStyle.height, left: item.commonStyle.left,top: item.commonStyle.top,position: item.commonStyle.position})"
-                  @handleElementClick="handleElementClick(item.uuid)"
-                  @resize="handleElementResize"
-                  :active="item.uuid === activeElementUUID">
-            <component :style="getCommonStyle({...item.commonStyle, top: 0, left: 0})" :is="item.elName" class="element-on-edit-pane" v-bind="item.propsValue"/>
-          </edit-shape>
+        <div class="page-preview-wrapper" ref="canvasPanel" id="canvas-panel" :draggable="false" @dragover="handleDragOver" @dragleave="handleDragLeave" @drop="handleDrop" :style="getCommonStyle(activePage.commonStyle)">
+					<Draggable
+						v-model="curPageElems"
+						class="dragger-box"
+						handle=".move"
+						animation="250"
+						@start="onDragStart"
+						@end="onDragEnd"
+					>
+						<!--页面组件列表展示-->
+						<edit-shape
+										v-for="item in curPageElems"
+										:key="item.uuid"
+										:id="item.uuid"
+										:uuid="item.uuid"
+										:is-dragging="isDragging"
+										:active="item.uuid === activeElementUUID"
+										:class="['components-edit-shape', {'active': item.uuid === activeElementUUID}, {'move': !componentResizing}]"
+										:default-style.sync="item.commonStyle"
+										:component-resizing.sync="componentResizing"
+										:style="getCommonStyle({width: item.commonStyle.width, height: item.commonStyle.height, left: item.commonStyle.left,})"
+										@handleElementClick="handleElementClick(item.uuid)"
+										@resize="handleElementResize">
+										<!-- <div v-for="item in activePage.elements" class="components-edit-shape" :key="item.uuid">{{ item.uuid }}</div> -->
+							<component :style="getCommonStyle({...item.commonStyle, left: 0, top: 0})" :is="item.elName" :key="item.uuid" class="element-on-edit-pane" v-bind="item.propsValue"/>
+						</edit-shape>
+					</Draggable>
         </div>
         <div class="page-wrapper-mask"></div>
       </div>
@@ -41,7 +55,7 @@
 	import {mapState, mapGetters} from 'vuex'
 	import html2canvas from 'html2canvas';
 	import { getComponentProps } from '@client/common/js/common'
-
+  import Draggable from 'vuedraggable'
 	// todo 测试用
 	window._qk_register_components_object = _qk_register_components_object
 	export default {
@@ -56,11 +70,13 @@
 			// 批量注册qk组件
 			..._qk_register_components_object,
 			// 画板组件
-			[editShape.name]: editShape
+			[editShape.name]: editShape,
+			Draggable,
 		},
 		data() {
 			return {
 				getCommonStyle: editorProjectConfig.getCommonStyle,
+				componentResizing: false,
 				menuOptions: [{
 					title: '复制',
 					icon: 'iconfont iconfuzhi',
@@ -99,37 +115,82 @@
 					value: 'layerBottom'
 				}],
 				editorPaneWidth: 0,
+				active: false,
+				isDragging: false,
+				prevActiveElementUuid: ''
 			}
 		},
 		computed: {
 			...mapState({
 				projectData: state => state.editor.projectData,
 				activePageUUID: state => state.editor.activePageUUID,
-				activeElementUUID: state => state.editor.activeElementUUID
+				activeElementUUID: state => state.editor.activeElementUUID,
 			}),
 			...mapGetters([
 				'currentPageIndex',
 				'activeElementIndex',
 				'activeElement',
-        'activePage'
+				'activePage',
 			]),
+			curPageElems: {
+				get() {
+					return this.activePage.elements
+				},
+				set(val) {
+					// let uuid = val[val.length - 1].uuid
+					this.$store.dispatch('setPageData', val);
+					this.$store.dispatch('setActiveElementUUID', this.activeElementUUID);
+					console.log(val, this.activeElementUUID, 'setPageData======')
+				}
+			},
 			getMenuOptionsPositionStyle(){
 				let both = (this.editorPaneWidth - this.projectData.width * this.scale) / 2;
 				let right = both < 60 ? 16 : both;
 				return {
 					right: right + 'px'
 				}
-      }
+			},
 		},
 		mounted() {
       this.editorPaneWidth = this.$refs.editorPane.offsetHeight;
 		},
 		methods: {
+			handleDragOver(e) {
+				e.preventDefault()
+			},
+			handleDragLeave() {
+				this.prevActiveElementUuid = this.activeElementUUID
+			},
+			onDragStart() {
+				this.isDragging = true
+			},
+			onDragEnd() {
+				if (this.isDragging) {
+					this.$store.dispatch('setPageData', this.curPageElems);
+				}
+			},
 			handleDrop(e) {
+				// eslint-disable-next-line no-unused-vars
+				let top = 0, left = 0, totalTop = 0;
 				let toAddElem = e.dataTransfer.getData('quark:comp')
-				toAddElem = JSON.parse(toAddElem)
-				let needProps = getComponentProps(toAddElem)
-				this.$store.dispatch('addElement', {...toAddElem, needProps})
+				if (toAddElem) {
+					this.isDragging = false
+					toAddElem = JSON.parse(toAddElem)
+					if (this.activePage.elements.length === 0) {
+						top = 0
+						left = 0
+					}
+					for(let item of this.activePage.elements) {
+						top += item && (item.commonStyle && (item.commonStyle.height || item.commonStyle.offsetHeight)) || (item.defaultStyle && (item.defaultStyle.height || item.defaultStyle.offsetHeight)) || 0
+					}
+					toAddElem.defaultStyle.left = 0
+					toAddElem.defaultStyle.top = top
+					let needProps = getComponentProps(toAddElem)
+					this.$store.dispatch('addElement', {...toAddElem, needProps})
+				} else {
+					this.isDragging = false
+					console.log(this.activePage.elements, this.curPageElems, '=====++++')
+				}
 			},
 			/**
 			 * 元素被点击
@@ -222,8 +283,17 @@
 
   .page-preview-wrapper {
     height: 100%;
+		width: 100%;
     position: relative;
+		overflow-y: auto;
+    overflow-x: none;
+    border-radius: 5px;
+    pointer-events: auto;
+    box-sizing: content-box;
   }
+	.dragger-box {
+		height: 100%;
+	}
 
   .page-wrapper-mask {
     height: 100%;

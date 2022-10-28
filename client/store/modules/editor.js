@@ -23,6 +23,9 @@ const state = {
 
 };
 const actions = {
+	setPageData({commit}, pageData) {
+		commit('setPageData', pageData)
+	},
 	/**
 	 * 初始化编辑项目数据
 	 * @param state
@@ -281,6 +284,10 @@ const mutations = {
 	setPrjectData(state, data){
 		state.projectData = data;
 	},
+	setPageData(state, pageData) {
+		let currentPageIndex = state.projectData.pages.findIndex(v => {return v.uuid === state.activePageUUID})
+		state.projectData.pages[currentPageIndex].elements = pageData
+	},
 	setActivePageUUID(state, data){
 		state.activePageUUID = data;
 	},
@@ -476,6 +483,10 @@ const mutations = {
 	}
 };
 const getters = {
+	curPageElems(state) {
+		let currentPageIndex = state.projectData.pages.findIndex(v => {return v.uuid === state.activePageUUID})
+		return state.projectData.pages[currentPageIndex].elements
+	},
 	/**
 	 * 当前选中的页面index
 	 * @param state
