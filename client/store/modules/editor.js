@@ -448,6 +448,7 @@ const mutations = {
 		// 限制undo 纪录步数，最多支持100步操作undo
 		state.historyCache.splice(100)
 		state.currentHistoryIndex++
+		console.log(state.historyCache, 'state.historyCache=====')
 	},
 	/**
 	 *

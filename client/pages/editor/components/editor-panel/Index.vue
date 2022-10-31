@@ -140,7 +140,7 @@
 					// let uuid = val[val.length - 1].uuid
 					this.$store.dispatch('setPageData', val);
 					this.$store.dispatch('setActiveElementUUID', this.activeElementUUID);
-					console.log(val, this.activeElementUUID, 'setPageData======')
+					console.log(val, this.activeElement, 'setPageData======')
 				}
 			},
 			getMenuOptionsPositionStyle(){
@@ -161,7 +161,8 @@
 			handleDragLeave() {
 				this.prevActiveElementUuid = this.activeElementUUID
 			},
-			onDragStart() {
+			onDragStart(e) {
+				this.$store.dispatch('setActiveElementUUID', e.item.id);
 				this.isDragging = true
 			},
 			onDragEnd() {
@@ -180,16 +181,15 @@
 						top = 0
 						left = 0
 					}
-					for(let item of this.activePage.elements) {
-						top += item && (item.commonStyle && (item.commonStyle.height || item.commonStyle.offsetHeight)) || (item.defaultStyle && (item.defaultStyle.height || item.defaultStyle.offsetHeight)) || 0
-					}
+					// for(let item of this.activePage.elements) {
+					// 	top += item && (item.commonStyle && (item.commonStyle.height || item.commonStyle.offsetHeight)) || (item.defaultStyle && (item.defaultStyle.height || item.defaultStyle.offsetHeight)) || 0
+					// }
 					toAddElem.defaultStyle.left = 0
-					toAddElem.defaultStyle.top = top
+					// toAddElem.defaultStyle.top = top
 					let needProps = getComponentProps(toAddElem)
 					this.$store.dispatch('addElement', {...toAddElem, needProps})
 				} else {
 					this.isDragging = false
-					console.log(this.activePage.elements, this.curPageElems, '=====++++')
 				}
 			},
 			/**
@@ -198,6 +198,7 @@
 			 */
 			handleElementClick(uuid) {
 				this.$store.dispatch('setActiveElementUUID', uuid);
+				// this.isDragging = true
 			},
 			/**
 			 * 移动改变元素大小定位

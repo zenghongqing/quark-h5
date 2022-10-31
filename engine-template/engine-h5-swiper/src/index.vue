@@ -7,7 +7,7 @@
              :style="getCommonStyle(page.commonStyle)">
           <!--页面内容区域-->
           <div class="quark-page-wrapper"
-               :style="getCommonStyle({...page.commonStyle, top: pageTop, height: pageData.height, width: pageData.width, position: 'relative'}, scalingRatio)">
+               :style="getCommonStyle({...page.commonStyle, height: pageData.height, width: pageData.width, position: 'relative'}, scalingRatio)">
             <componentsTemplate
                     v-for="(item, index) in page.elements"
                     :key="index"
@@ -47,7 +47,7 @@
 		created() {
 			let pageData = window._pageData;
 			this.scalingRatio = document.body.clientWidth / $config.canvasH5Width;
-			this.pageTop = (document.documentElement.clientHeight - pageData.height * this.scalingRatio) / 2
+			// this.pageTop = (document.documentElement.clientHeight - pageData.height * this.scalingRatio) / 2
 			this.pageTop = Math.max(this.pageTop, 0);
 
 			// 将组件加个状态标识
